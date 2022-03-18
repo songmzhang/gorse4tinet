@@ -750,11 +750,11 @@ func (d *SQLDatabase) GetUser(userId string) (User, error) {
 	var err error
 	switch d.driver {
 	case MySQL:
-		result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment` FROM users WHERE user_id = ?", userId)
+		result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment`, user_name, gender FROM users WHERE user_id = ?", userId)
 	case Postgres:
-		result, err = d.client.Query("SELECT user_id, labels, subscribe, comment FROM users WHERE user_id = $1", userId)
+		result, err = d.client.Query("SELECT user_id, labels, subscribe, comment, user_name, gender FROM users WHERE user_id = $1", userId)
 	case ClickHouse:
-		result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment` FROM users WHERE user_id = ?", userId)
+		result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment`, user_name, gender FROM users WHERE user_id = ?", userId)
 	}
 	if err != nil {
 		return User{}, errors.Trace(err)
@@ -764,7 +764,7 @@ func (d *SQLDatabase) GetUser(userId string) (User, error) {
 		var user User
 		var labels string
 		var subscribe string
-		if err = result.Scan(&user.UserId, &labels, &subscribe, &user.Comment); err != nil {
+		if err = result.Scan(&user.UserId, &labels, &subscribe, &user.Comment, &user.UserName, &user.Gender); err != nil {
 			return User{}, errors.Trace(err)
 		}
 		if err = json.Unmarshal([]byte(labels), &user.Labels); err != nil {
@@ -852,13 +852,13 @@ func (d *SQLDatabase) GetUsers(cursor string, n int) (string, []User, error) {
 	var err error
 	switch d.driver {
 	case MySQL:
-		result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment` FROM users "+
+		result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment`, user_name, gender FROM users "+
 			"WHERE user_id >= ? ORDER BY user_id LIMIT ?", cursor, n+1)
 	case Postgres:
-		result, err = d.client.Query("SELECT user_id, labels, subscribe, comment FROM users "+
+		result, err = d.client.Query("SELECT user_id, labels, subscribe, comment, user_name, gender FROM users "+
 			"WHERE user_id >= $1 ORDER BY user_id LIMIT $2", cursor, n+1)
 	case ClickHouse:
-		result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment` FROM users "+
+		result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment`, user_name, gender FROM users "+
 			"WHERE user_id >= ? ORDER BY user_id LIMIT ?", cursor, n+1)
 	}
 	if err != nil {
@@ -870,7 +870,7 @@ func (d *SQLDatabase) GetUsers(cursor string, n int) (string, []User, error) {
 		var user User
 		var labels string
 		var subscribe string
-		if err = result.Scan(&user.UserId, &labels, &subscribe, &user.Comment); err != nil {
+		if err = result.Scan(&user.UserId, &labels, &subscribe, &user.Comment, &user.UserName, &user.Gender); err != nil {
 			return "", nil, errors.Trace(err)
 		}
 		if err = json.Unmarshal([]byte(labels), &user.Labels); err != nil {
@@ -899,11 +899,11 @@ func (d *SQLDatabase) GetUserStream(batchSize int) (chan []User, chan error) {
 		var err error
 		switch d.driver {
 		case MySQL:
-			result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment` FROM users")
+			result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment`, user_name, gender FROM users")
 		case Postgres:
-			result, err = d.client.Query("SELECT user_id, labels, subscribe, comment FROM users")
+			result, err = d.client.Query("SELECT user_id, labels, subscribe, comment, user_name, gender FROM users")
 		case ClickHouse:
-			result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment` FROM users")
+			result, err = d.client.Query("SELECT user_id, labels, subscribe, `comment`, user_name, gender FROM users")
 		}
 		if err != nil {
 			errChan <- errors.Trace(err)
@@ -916,7 +916,7 @@ func (d *SQLDatabase) GetUserStream(batchSize int) (chan []User, chan error) {
 			var user User
 			var labels string
 			var subscribe string
-			if err = result.Scan(&user.UserId, &labels, &subscribe, &user.Comment); err != nil {
+			if err = result.Scan(&user.UserId, &labels, &subscribe, &user.Comment, &user.UserName, &user.Gender); err != nil {
 				errChan <- errors.Trace(err)
 				return
 			}

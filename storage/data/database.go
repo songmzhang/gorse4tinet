@@ -60,6 +60,8 @@ type User struct {
 	Labels    []string
 	Subscribe []string
 	Comment   string
+	UserName  string
+	Gender    string
 }
 
 // UserPatch is the modification on a user.
@@ -67,6 +69,8 @@ type UserPatch struct {
 	Labels    []string
 	Subscribe []string
 	Comment   *string
+	UserName  string
+	Gender    string
 }
 
 // FeedbackKey identifies feedback.
